@@ -1,0 +1,36 @@
+services:
+
+  ipfs:
+    container_name: ipfs-${PT}
+    image: ipfs/kubo:latest
+    ports:
+     - "4001:4001"
+     - "5001:5001"
+     - "8080:8080"
+    volumes:
+      - ./ipfs:/data/ipfs
+      - ./bootstrap.sh:/container-init.d/bootstrap.sh
+    restart: always
+
+  cluster-ipfs:
+    container_name: cluster-${PT}
+    image: ghilmanaji/ipfs-cluster-custom:v1.7
+    depends_on:
+      - ipfs
+    environment:
+      HOSTNAME: cluster-${PT}
+      CLUSTER_PEERNAME: cluster-${PT}
+      CLUSTER_SECRET: ${CLUSTER_SECRET}
+      CLUSTER_IPFSHTTP_NODEMULTIADDRESS: /dns4/ipfs-ITTP/tcp/5001
+      CLUSTER_CRDT_TRUSTEDPEERS: '*'
+      CLUSTER_RESTAPI_HTTPLISTENMULTIADDRESS: /ip4/0.0.0.0/tcp/9094
+      CLUSTER_MONITORPINGINTERVAL: 2s
+    ports:
+      - "9094:9094"
+      - "9095:9095"
+      - "9096:9096"
+      - "2512:2512"
+    volumes:
+      - ./cluster:/root/.ipfs-cluster
+      - ./test:/test
+    restart: always
